@@ -53,7 +53,7 @@ class OmarScdfExtractorApplication {
   /**
   * Class Variables
   */
-  String[] mediaTypeList = ['image/jpeg','image/tiff','image/nitf']
+  String[] mediaTypeList = ['image/jpeg','image/tiff','image/nitf','text/plain']
   /***/
 
   static final void main(String[] args){
@@ -75,12 +75,9 @@ class OmarScdfExtractorApplication {
       if(parsedJson){
         logger.debug("parsedJson inside if statement: ${parsedJson}")
         parsedJson.files.each{file->
-            println("File from jason: ${file}")
             if (file.contains("zip")){
-              println("Extracted Zip File: ${file}")
               final String[] extractedFiles = extractZipFileContent(file)
               extractedFiles.each{extractedFile->
-                println("Extracted file sent to message: ${extractedFile}")
                 sendMsg(extractedFile)
               }
             }
@@ -104,7 +101,6 @@ class OmarScdfExtractorApplication {
          InputStream zinputStream = zipFile.getInputStream(it)
          boolean isValidFile = checkType(zinputStream)
          if (isValidFile){
-           println("Files Destination: ${fileDestination} + ${File.separator} + ${it.name}")
            def fOut = new File(fileDestination + File.separator + it.name)
            extractedFiles.add(fOut.getAbsolutePath())
            new File(fOut.parent).mkdirs()
