@@ -75,12 +75,12 @@ class OmarScdfExtractorApplication {
       if(parsedJson){
         logger.debug("parsedJson inside if statement: ${parsedJson}")
         parsedJson.files.each{file->
-            logger.debug("File from jason: ${file}")
+            println("File from jason: ${file}")
             if (file.contains("zip")){
-              logger.debug("Extracted Zip File: ${file}")
+              println("Extracted Zip File: ${file}")
               final String[] extractedFiles = extractZipFileContent(file)
               extractedFiles.each{extractedFile->
-                logger.debug("Extracted file sent to message: ${extractedFile}")
+                println("Extracted file sent to message: ${extractedFile}")
                 sendMsg(extractedFile)
               }
             }
@@ -104,7 +104,7 @@ class OmarScdfExtractorApplication {
          InputStream zinputStream = zipFile.getInputStream(it)
          boolean isValidFile = checkType(zinputStream)
          if (isValidFile){
-           logger.debug("Files Destination: ${fileDestination} + ${File.separator} + ${it.name}")
+           println("Files Destination: ${fileDestination} + ${File.separator} + ${it.name}")
            def fOut = new File(fileDestination + File.separator + it.name)
            extractedFiles.add(fOut.getAbsolutePath())
            new File(fOut.parent).mkdirs()
