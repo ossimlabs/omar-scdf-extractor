@@ -38,7 +38,7 @@ class OmarScdfExtractorApplication {
   /**
   * The application logger
   */
-  private Logger logger = LoggerFactory.getLogger(this.getClass())
+  private final Logger logger = LoggerFactory.getLogger(this.getClass())
 
   /**
   * Variables passed in from application.properties
@@ -56,7 +56,7 @@ class OmarScdfExtractorApplication {
   String[] mediaTypeList = ['image/jpeg','image/tiff','image/nitf']
   /***/
 
-  static void main(String[] args){
+  static final void main(String[] args){
     SpringApplication.run OmarScdfExtractorApplication, args
   }
 
@@ -71,11 +71,14 @@ class OmarScdfExtractorApplication {
 
     if(message.payload != null){
       final def parsedJson = new JsonSlurper().parseText(message.payload)
+      logger.debug("parsedJson outside if statement: ${parsedJson}")
       if(parsedJson){
+        logger.debug("parsedJson inside if statement: ${parsedJson}")
         parsedJson.files.each{file->
+            logger.debug("File from jason: ${file}")
             if (file.contains("zip")){
               logger.debug("Extracted Zip File: ${file}")
-              String[] extractedFiles = extractZipFileContent(file)
+              final String[] extractedFiles = extractZipFileContent(file)
               extractedFiles.each{extractedFile->
                 logger.debug("Extracted file sent to message: ${extractedFile}")
                 sendMsg(extractedFile)
@@ -87,7 +90,7 @@ class OmarScdfExtractorApplication {
 }
 
   @SendTo(Processor.OUTPUT)
-  final String sendMsg(String extractedFile){
+  final String sendMsg(final String extractedFile){
     final JsonBuilder filesExtractedJson = new JsonBuilder()
     filesExtractedJson(files: extractedFile).toString()
   }
@@ -101,9 +104,9 @@ class OmarScdfExtractorApplication {
          InputStream zinputStream = zipFile.getInputStream(it)
          boolean isValidFile = checkType(zinputStream)
          if (isValidFile){
-           extractedFiles.add(it.name)
            logger.debug("Files Destination: ${fileDestination} + ${File.separator} + ${it.name}")
            def fOut = new File(fileDestination + File.separator + it.name)
+           extractedFiles.add(fOut.getAbsolutePath())
            new File(fOut.parent).mkdirs()
            def fos = new FileOutputStream(fOut)
            def buf = new byte[it.size]
