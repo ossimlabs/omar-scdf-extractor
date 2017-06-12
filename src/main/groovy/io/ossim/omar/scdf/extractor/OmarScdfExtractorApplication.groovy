@@ -92,10 +92,10 @@ class OmarScdfExtractorApplication {
     filesExtractedJson(files: extractedFile).toString()
   }
 
-  String[] extractZipFileContent(String zipFileName){
+  ArrayList<String> extractZipFileContent(String zipFileName){
      String zipFilePath = fileSource + zipFileName
      ZipFile zipFile = new ZipFile(new File(zipFilePath))
-     String[] extractedFiles = []
+     ArrayList<String> extractedFiles = new ArrayList<String>()
      zipFile.entries().each{
        if (!it.isDirectory()){
          InputStream zinputStream = zipFile.getInputStream(it)
