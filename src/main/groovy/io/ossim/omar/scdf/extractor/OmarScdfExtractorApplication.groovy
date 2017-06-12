@@ -60,8 +60,8 @@ class OmarScdfExtractorApplication {
     SpringApplication.run OmarScdfExtractorApplication, args
   }
 
-  @StreamListener(Processor.INPUT) @SendTo(Processor.OUTPUT)
-  final String extract(final Message<?> message){
+  @StreamListener(Processor.INPUT)
+  final void receiveMsg(final Message<?> message){
 
     if(logger.isDebugEnabled()){
       logger.debug("Message received: ${message}")
@@ -71,31 +71,37 @@ class OmarScdfExtractorApplication {
 
     if(message.payload != null){
       final def parsedJson = new JsonSlurper().parseText(message.payload)
-      String[] extractedFileNames = []
       if(parsedJson){
         parsedJson.files.each{file->
-            file.each{item->
-              if (item.contains("zip")){
-                logger.debug("Extracted Files: ${item}")
-                extractedFileNames.add(item)
-                extractZipFileContent(item)
+            if (file.contains("zip")){
+              logger.debug("Extracted Zip File: ${file}")
+              String[] extractedFiles = extractZipFileContent(file)
+              extractedFiles.each{extractedFile->
+                logger.debug("Extracted file sent to message: ${extractedFile}")
+                sendMsg(extractedFile)
               }
             }
         }
       }
-      final JsonBuilder filesExtractedJson = new JsonBuilder()
-      filesExtractedJson(files: extractedFileNames).toString()
     }
 }
 
-  void extractZipFileContent(String zipFileName){
+  @SendTo(Processor.OUTPUT)
+  final String sendMsg(String extractedFile){
+    final JsonBuilder filesExtractedJson = new JsonBuilder()
+    filesExtractedJson(files: extractedFile).toString()
+  }
+
+  String[] extractZipFileContent(String zipFileName){
      String zipFilePath = fileSource + zipFileName
      ZipFile zipFile = new ZipFile(new File(zipFilePath))
+     String[] extractedFiles = []
      zipFile.entries().each{
        if (!it.isDirectory()){
          InputStream zinputStream = zipFile.getInputStream(it)
          boolean isValidFile = checkType(zinputStream)
          if (isValidFile){
+           extractedFiles.add(it.name)
            logger.debug("Files Destination: ${fileDestination} + ${File.separator} + ${it.name}")
            def fOut = new File(fileDestination + File.separator + it.name)
            new File(fOut.parent).mkdirs()
@@ -109,6 +115,8 @@ class OmarScdfExtractorApplication {
      }
      zipFile.close()
      deleteZipFile(zipFilePath)
+
+     return extractedFiles
    }
 
   boolean checkType(InputStream zinputStream){
