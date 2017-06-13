@@ -90,18 +90,28 @@ class OmarScdfExtractorApplication {
     if(logger.isDebugEnabled()){
       logger.debug("Message received: ${message}")
     }
-    if(message.payload.length() != 0){
+    println("Message Payload Size: ${message.payload.length()}")
+    if((null != message.payload) || (message.payload.length() != 0)){
       logger.debug("Message payload: ${message.payload}")
       final def parsedJson = new JsonSlurper().parseText(message.payload)
       if(parsedJson){
         parsedJson.files.each{file->
           if (file.contains("zip")){
-            final String[] extractedFiles = extractZipFileContent(file)
-            extractedFiles.each{extractedFile->
-              sendMsg(extractedFile)
-            }
+            String filePath = fileSource + file
+            File fileFromMsg = new File(filePath)
+
+            /**************************************************
+            * If statement that checks if fileFromMsg is empty.
+            **************************************************/
+            if (fileFromMsg.size() > 0){
+              ZipFile zipFile = new ZipFile(fileFromMsg)
+              final String[] extractedFiles = extractZipFileContent(file)
+              extractedFiles.each{extractedFile->
+                sendMsg(extractedFile)
+              } // end extractedFiles.each
+            } // end fileFromMsg.size() if statement
           } // end file.contains if statement
-        }
+        } // end parsedJson.files.each
       } // end parseJason if statement
     } // end message.payload.length() if statement
 } // end method receiveMsg
@@ -135,14 +145,11 @@ class OmarScdfExtractorApplication {
   *           defined by in the application.properties file.
   *           (fileSource, fileDestination)
   *
-  * @param    zipFileName (String)
+  * @param    zipFile (File)
   * @return   extractedFiles (ArrayList<String>)
   *
   ***********************************************************/
-  ArrayList<String> extractZipFileContent(String zipFileName){
-     String zipFilePath = fileSource + zipFileName
-     ZipFile zipFile = new ZipFile(new File(zipFilePath))
-
+  ArrayList<String> extractZipFileContent(File zipFile){
      /***********************************************
      * extractedFiles is used to store the full path
      * of the files extracted from the zip file.
@@ -186,7 +193,7 @@ class OmarScdfExtractorApplication {
              fos.close()
            }// end isValidFile if statement
          } // end it.isDirectory if statement
-       } // end each iterator
+       } // end zipFile.entries().each
      } // end zipfile.side if statement
 
      zipFile.close()
