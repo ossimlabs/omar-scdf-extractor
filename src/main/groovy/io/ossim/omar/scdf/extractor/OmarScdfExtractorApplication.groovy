@@ -12,7 +12,9 @@ import groovy.json.JsonSlurper
 import groovy.json.JsonBuilder
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.util.zip.ZipFile
 import org.apache.tika.Tika
+import org.apache.tika.parser.gdal.GDALParser
 
 @SpringBootApplication
 @EnableBinding(Processor.class)
@@ -75,11 +77,12 @@ class OmarScdfExtractorApplication {
   /***********************************************************
   *
   * Function: receiveMsg
-  * Purpose:  Takes the path to a file, use it to build a Json
-  *           message, then pass it on the Processor pipe.
+  * Purpose:  Takes a message, extract the file names, then send
+  *           the zip file to the extractZipFileContent method.
+  *           The extracted file name is then returned and
+  *           message is sent.
   *
-  * @param    extractedFile (String)
-  * @return   filesExtractedJson (converted to String)
+  * @param    message (Message<?>)
   *
   ***********************************************************/
   @StreamListener(Processor.INPUT)
@@ -88,8 +91,7 @@ class OmarScdfExtractorApplication {
       logger.debug("Message received: ${message}")
     }
 
-    if((null != message.payload) || (message.payload.length() != 0)){
-      
+    if(null != message.payload){
       if(logger.isDebugEnabled()) {
         logger.debug("Message payload: ${message.payload}")
       }
@@ -105,8 +107,8 @@ class OmarScdfExtractorApplication {
             * If statement that checks if fileFromMsg is empty.
             **************************************************/
             if (fileFromMsg.size() > 0){
-
-              final String[] extractedFiles = extractZipFileContent(file)
+              ZipFile zipFile = new ZipFile(fileFromMsg)
+              final ArrayList<String> extractedFiles = extractZipFileContent(zipFile)
               extractedFiles.each{extractedFile->
                 sendMsg(extractedFile)
               } // end extractedFiles.each
@@ -146,11 +148,11 @@ class OmarScdfExtractorApplication {
   *           defined by in the application.properties file.
   *           (fileSource, fileDestination)
   *
-  * @param    zipFile (File)
+  * @param    zipFile (ZipFile)
   * @return   extractedFiles (ArrayList<String>)
   *
   ***********************************************************/
-  ArrayList<String> extractZipFileContent(final File zipFile){
+  ArrayList<String> extractZipFileContent(final ZipFile zipFile){
      /***********************************************
      * extractedFiles is used to store the full path
      * of the files extracted from the zip file.
