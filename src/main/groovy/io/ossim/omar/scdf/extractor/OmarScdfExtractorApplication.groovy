@@ -6,31 +6,13 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.cloud.stream.annotation.EnableBinding
 import org.springframework.cloud.stream.annotation.StreamListener
 import org.springframework.cloud.stream.messaging.Processor
-import org.springframework.core.io.support.ResourcePatternResolver
 import org.springframework.messaging.Message
 import org.springframework.messaging.handler.annotation.SendTo
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.core.io.ResourceLoader
-import org.springframework.core.io.Resource
 import groovy.json.JsonSlurper
 import groovy.json.JsonBuilder
-import groovy.json.JsonOutput
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import com.amazonaws.AmazonClientException;
-import com.amazonaws.AmazonServiceException;
-import com.amazonaws.auth.profile.ProfileCredentialsProvider;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.model.PutObjectRequest;
-import com.amazonaws.services.s3.model.ObjectMetadata
-import com.amazonaws.services.s3.model.GetObjectRequest
-import java.io.FileInputStream
-import java.util.zip.ZipFile
 import org.apache.tika.Tika
-import org.apache.tika.parser.gdal.GDALParser
-import java.util.zip.ZipInputStream
-import java.io.FileInputStream
 
 @SpringBootApplication
 @EnableBinding(Processor.class)
@@ -59,7 +41,22 @@ class OmarScdfExtractorApplication {
   * format recognized by Apache Tika.
   * https://tika.apache.org/1.15/formats.html
   ***************************************************/
-  String[] mediaTypeList = ['image/jpeg','image/tiff','image/nitf']
+  final public static String[] MEDIA_TYPE_LIST = ['image/jpeg','image/tiff','image/nitf']
+
+  /**
+   * Constructor
+   */
+  OmarScdfExtractorApplication() {
+
+    // Check for empty properties
+    if(null == fileSource || fileSource.equals("")){
+      fileSource = "/data/"
+    }
+
+    if(null == fileDestination || fileDestination.equals("")){
+      fileDestination = "/data/"
+    }
+  }
 
 
   /***********************************************************
@@ -90,21 +87,25 @@ class OmarScdfExtractorApplication {
     if(logger.isDebugEnabled()){
       logger.debug("Message received: ${message}")
     }
-    println("Message Payload Size: ${message.payload.length()}")
+
     if((null != message.payload) || (message.payload.length() != 0)){
-      logger.debug("Message payload: ${message.payload}")
+      
+      if(logger.isDebugEnabled()) {
+        logger.debug("Message payload: ${message.payload}")
+      }
+
       final def parsedJson = new JsonSlurper().parseText(message.payload)
       if(parsedJson){
         parsedJson.files.each{file->
           if (file.contains("zip")){
-            String filePath = fileSource + file
-            File fileFromMsg = new File(filePath)
+            final String filePath = fileSource + file
+            final File fileFromMsg = new File(filePath)
 
             /**************************************************
             * If statement that checks if fileFromMsg is empty.
             **************************************************/
             if (fileFromMsg.size() > 0){
-              ZipFile zipFile = new ZipFile(fileFromMsg)
+
               final String[] extractedFiles = extractZipFileContent(file)
               extractedFiles.each{extractedFile->
                 sendMsg(extractedFile)
@@ -149,12 +150,12 @@ class OmarScdfExtractorApplication {
   * @return   extractedFiles (ArrayList<String>)
   *
   ***********************************************************/
-  ArrayList<String> extractZipFileContent(File zipFile){
+  ArrayList<String> extractZipFileContent(final File zipFile){
      /***********************************************
      * extractedFiles is used to store the full path
      * of the files extracted from the zip file.
      ***********************************************/
-     ArrayList<String> extractedFiles = new ArrayList<String>()
+     final ArrayList<String> extractedFiles = new ArrayList<String>()
 
      /***********************************************
      * If statement that checks if zipfile is empty.
@@ -169,8 +170,8 @@ class OmarScdfExtractorApplication {
          * extracted is not a directory
          ***********************************************/
          if (!it.isDirectory()){
-           InputStream zinputStream = zipFile.getInputStream(it)
-           boolean isValidFile = checkType(zinputStream)
+           final InputStream zinputStream = zipFile.getInputStream(it)
+           final boolean isValidFile = checkType(zinputStream)
 
            /***********************************************
            * If statement that checks if the media type of
@@ -217,13 +218,13 @@ class OmarScdfExtractorApplication {
   * @return   isValid (boolean)
   *
   ***********************************************************/
-  boolean checkType(InputStream zinputStream){
+  boolean checkType(final InputStream zinputStream){
     /*************************************************
     * The detect() method in the Tika class is used
     * to determine the media type of the InputSream.
     **************************************************/
-    Tika tika = new Tika()
-    String mediaType = tika.detect(zinputStream)
+    final Tika tika = new Tika()
+    final String mediaType = tika.detect(zinputStream)
 
     /*************************************************
     * The variable being returned
@@ -234,7 +235,7 @@ class OmarScdfExtractorApplication {
     * Checks to see if the media type returned by the
     * Tika detect() method is in the mediaTypeList.
     **************************************************/
-    if(mediaTypeList.contains(mediaType)){
+    if(OmarScdfExtractorApplication.MEDIA_TYPE_LIST.contains(mediaType)){
       isValid = true
     }
     return isValid
@@ -249,8 +250,13 @@ class OmarScdfExtractorApplication {
   * @param    zipFile (String)
   *
   ***********************************************************/
-  void deleteZipFile(String zipFile){
-    File file = new File(zipFile)
+  void deleteZipFile(final String zipFile){
+
+    if(logger.isDebugEnabled()){
+      logger.debug("Deleting file with name: ${zipFile}")
+    }
+
+    final File file = new File(zipFile)
     file.delete()
   } // end method deleteZipFile
 
