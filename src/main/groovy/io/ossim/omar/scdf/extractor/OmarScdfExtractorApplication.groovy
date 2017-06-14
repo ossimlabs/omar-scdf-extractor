@@ -132,7 +132,7 @@ class OmarScdfExtractorApplication {
   *
   ***********************************************************/
   @StreamListener
-  @SendTo(Processor.OUTPUT)
+  @Output(Processor.OUTPUT)
   final String sendMsg(final String extractedFile){
     final JsonBuilder filesExtractedJson = new JsonBuilder()
     if(logger.isDebugEnabled()){
