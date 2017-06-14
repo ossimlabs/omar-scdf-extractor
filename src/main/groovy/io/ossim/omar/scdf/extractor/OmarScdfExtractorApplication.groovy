@@ -192,8 +192,8 @@ class OmarScdfExtractorApplication {
              FileOutputStream fos = new FileOutputStream(fout);
              byte[] readBuffer = new byte[1024];
              int length;
-             while ((length = fis.read(readBuffer)) != -1) {
-               fos.write(bytes, 0, length);
+             while ((length = fis.read(readBuffer)) >= 0) {
+               fos.write(readBuffer, 0, length);
              }
              fis.close();
              fos.close();
