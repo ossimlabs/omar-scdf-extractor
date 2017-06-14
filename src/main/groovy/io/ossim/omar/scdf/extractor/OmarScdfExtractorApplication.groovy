@@ -180,20 +180,23 @@ class OmarScdfExtractorApplication {
            * the extracted file is supported.
            ***********************************************/
            if (isValidFile){
-             def fOut = new File(fileDestination + File.separator + it.name)
+             def fout = new File(fileDestination + File.separator + it.name)
 
              /***********************************************
              * Adds the fullpath to the extracted file to the
              * extractedFiles array list.
              ***********************************************/
-             extractedFiles.add(fOut.getAbsolutePath())
+             extractedFiles.add(fout.getAbsolutePath())
 
-             new File(fOut.parent).mkdirs()
-             def fos = new FileOutputStream(fOut)
-             def buf = new byte[it.size]
-             def len = zipFile.getInputStream(it).read(buf)
-             fos.write(buf, 0, len)
-             fos.close()
+             InputStream fis = zipFile.getInputStream(it);
+             FileOutputStream fos = new FileOutputStream(fout);
+             byte[] readBuffer = new byte[1024];
+             int length;
+             while ((length = fis.read(readBuffer)) >= 0) {
+               fos.write(bytes, 0, length);
+             }
+             fis.close();
+             fos.close();
            }// end isValidFile if statement
          } // end it.isDirectory if statement
        } // end zipFile.entries().each
