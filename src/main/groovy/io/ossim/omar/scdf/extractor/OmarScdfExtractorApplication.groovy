@@ -135,7 +135,7 @@ class OmarScdfExtractorApplication {
   @SendTo(Processor.OUTPUT)
   final String sendMsg(final String extractedFile){
     final JsonBuilder filesExtractedJson = new JsonBuilder()
-    filesExtractedJson(files: extractedFile).toString()
+    filesExtractedJson(filename: extractedFile)
   } // end method sendMsg
 
 
@@ -208,7 +208,7 @@ class OmarScdfExtractorApplication {
      * deleteZipFile is used to delete the zip file after
      * all the files are extracted from it.
      ***************************************************/
-     deleteZipFile(zipFile.getAbsolutePath())
+     deleteZipFile(zipFile.getName())
 
      return extractedFiles
    } // end method extractZipFileContent
