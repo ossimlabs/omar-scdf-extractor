@@ -208,7 +208,7 @@ class OmarScdfExtractorApplication {
      * deleteZipFile is used to delete the zip file after
      * all the files are extracted from it.
      ***************************************************/
-     deleteZipFile(zipFilePath)
+     deleteZipFile(zipFile.getAbsolutePath())
 
      return extractedFiles
    } // end method extractZipFileContent
