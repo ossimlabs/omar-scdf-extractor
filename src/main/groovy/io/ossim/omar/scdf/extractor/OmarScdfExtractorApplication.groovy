@@ -131,6 +131,7 @@ class OmarScdfExtractorApplication {
   * @return   filesExtractedJson (converted to String)
   *
   ***********************************************************/
+  @StreamListener
   @SendTo(Processor.OUTPUT)
   final String sendMsg(final String extractedFile){
     final JsonBuilder filesExtractedJson = new JsonBuilder()
