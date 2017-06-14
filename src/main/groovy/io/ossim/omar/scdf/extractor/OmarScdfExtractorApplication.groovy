@@ -5,10 +5,10 @@ import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.cloud.stream.annotation.EnableBinding
 import org.springframework.cloud.stream.annotation.StreamListener
-import org.springframework.cloud.stream.annotation.Output
 import org.springframework.cloud.stream.messaging.Processor
 import org.springframework.messaging.Message
 import org.springframework.messaging.handler.annotation.SendTo
+import org.springframework.cloud.stream.binding.BinderAwareChannelResolver
 import groovy.json.JsonSlurper
 import groovy.json.JsonBuilder
 import org.slf4j.Logger
@@ -20,6 +20,9 @@ import org.apache.tika.parser.gdal.GDALParser
 @SpringBootApplication
 @EnableBinding(Processor.class)
 class OmarScdfExtractorApplication {
+
+  private BinderAwareChannelResolver resolver
+
   /**************************************************
   * The application logger
   ***************************************************/
@@ -110,7 +113,7 @@ class OmarScdfExtractorApplication {
             if (fileFromMsg.size() > 0){
               ZipFile zipFile = new ZipFile(fileFromMsg)
               if (zipFile.size() > 0){
-                  extractZipFileContent(zipFile)
+                  extractZipFileContent(zipFile, message)
               }
             } // end fileFromMsg.size() if statement
           } // end file.contains if statement
@@ -132,14 +135,17 @@ class OmarScdfExtractorApplication {
   * @return   filesExtractedJson (converted to String)
   *
   ***********************************************************/
-  @StreamListener
-  @Output(Processor.OUTPUT)
-  final String sendMsg(final String extractedFile){
+  final void sendMsg(final String extractedFile, final Message<?> message){
     final JsonBuilder filesExtractedJson = new JsonBuilder()
     if(logger.isDebugEnabled()){
       logger.debug("Message Sent: ${filesExtractedJson(filename: extractedFile)}")
     }
-    filesExtractedJson(filename: extractedFile).toString()
+    String msgPayload = filesExtractedJson(filename: extractedFile).toString()
+    Message<String> msgToSend = MessageBuilder.withPayload(msgPayload)
+        .copyHeaders(message.getHeaders())
+        .build()
+
+    resolver.resolveDestination(Processor.OUTPUT).send(msgToSend)
   } // end method sendMsg
 
 
@@ -155,7 +161,7 @@ class OmarScdfExtractorApplication {
   * @param    zipFile (ZipFile)
   *
   ***********************************************************/
-  void extractZipFileContent(final ZipFile zipFile){
+  void extractZipFileContent(final ZipFile zipFile, final Message<?> message){
      /***********************************************
      * extractedFiles is used to store the full path
      * of the files extracted from the zip file.
@@ -206,7 +212,7 @@ class OmarScdfExtractorApplication {
              }
              fis.close()
              fos.close()
-             sendMsg(extractedFile)
+             sendMsg(extractedFile, message)
            }// end isValidFile if statement
          } // end it.isDirectory if statement
        } // end zipFile.entries().each
