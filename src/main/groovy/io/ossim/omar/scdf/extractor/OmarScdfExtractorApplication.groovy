@@ -137,7 +137,7 @@ class OmarScdfExtractorApplication {
     if(logger.isDebugEnabled()){
       logger.debug("Message Sent: ${filesExtractedJson(filename: extractedFile)}")
     }
-    filesExtractedJson(filename: extractedFile)
+    filesExtractedJson(filename: extractedFile).toString()
   } // end method sendMsg
 
 
@@ -181,7 +181,7 @@ class OmarScdfExtractorApplication {
            * the extracted file is supported.
            ***********************************************/
            if (isValidFile){
-             def fout = new File(fileDestination + it.name)
+             File fout = new File(fileDestination + it.name)
 
              /***********************************************
              * Makes the parent directory of the file that
@@ -195,16 +195,15 @@ class OmarScdfExtractorApplication {
              ***********************************************/
              extractedFile = fout.getAbsolutePath()
 
-             InputStream fis = zipFile.getInputStream(it);
-             FileOutputStream fos = new FileOutputStream(fout);
-             byte[] readBuffer = new byte[1024];
-             int length;
+             InputStream fis = zipFile.getInputStream(it)
+             FileOutputStream fos = new FileOutputStream(fout)
+             byte[] readBuffer = new byte[1024]
+             int length
              while ((length = fis.read(readBuffer)) >= 0){
-               fos.write(readBuffer, 0, length);
+               fos.write(readBuffer, 0, length)
              }
-             fis.close();
-             fos.close();
-
+             fis.close()
+             fos.close()
              sendMsg(extractedFile)
            }// end isValidFile if statement
          } // end it.isDirectory if statement
