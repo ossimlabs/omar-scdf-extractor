@@ -108,16 +108,15 @@ class OmarScdfExtractorApplication {
             **************************************************/
             if (fileFromMsg.size() > 0){
               ZipFile zipFile = new ZipFile(fileFromMsg)
-              final ArrayList<String> extractedFiles = extractZipFileContent(zipFile)
-              extractedFiles.each{extractedFile->
-                sendMsg(extractedFile)
-              } // end extractedFiles.each
+              if (zipFile.size() > 0){
+                  extractZipFileContent(zipFile)
+              }
             } // end fileFromMsg.size() if statement
           } // end file.contains if statement
         } // end parsedJson.files.each
       } // end parseJason if statement
     } // end message.payload.length() if statement
-} // end method receiveMsg
+  } // end method receiveMsg
 
 
   /***********************************************************
@@ -135,6 +134,9 @@ class OmarScdfExtractorApplication {
   @SendTo(Processor.OUTPUT)
   final String sendMsg(final String extractedFile){
     final JsonBuilder filesExtractedJson = new JsonBuilder()
+    if(logger.isDebugEnabled()){
+      logger.debug("Message Sent: ${filesExtractedJson(filename: extractedFile)}")
+    }
     filesExtractedJson(filename: extractedFile)
   } // end method sendMsg
 
@@ -149,15 +151,14 @@ class OmarScdfExtractorApplication {
   *           (fileSource, fileDestination)
   *
   * @param    zipFile (ZipFile)
-  * @return   extractedFiles (ArrayList<String>)
   *
   ***********************************************************/
-  ArrayList<String> extractZipFileContent(final ZipFile zipFile){
+  void extractZipFileContent(final ZipFile zipFile){
      /***********************************************
      * extractedFiles is used to store the full path
      * of the files extracted from the zip file.
      ***********************************************/
-     final ArrayList<String> extractedFiles = new ArrayList<String>()
+     final String extractedFile
 
      /***********************************************
      * If statement that checks if zipfile is empty.
@@ -180,37 +181,42 @@ class OmarScdfExtractorApplication {
            * the extracted file is supported.
            ***********************************************/
            if (isValidFile){
-             def fout = new File(fileDestination + File.separator + it.name)
+             def fout = new File(fileDestination + it.name)
+
+             /***********************************************
+             * Makes the parent directory of the file that
+             * was extracted from the zip file.
+             ************************************************/
+             new File(fout.parent).mkdirs()
 
              /***********************************************
              * Adds the fullpath to the extracted file to the
              * extractedFiles array list.
              ***********************************************/
-             extractedFiles.add(fout.getAbsolutePath())
+             extractedFile = fout.getAbsolutePath()
 
              InputStream fis = zipFile.getInputStream(it);
              FileOutputStream fos = new FileOutputStream(fout);
              byte[] readBuffer = new byte[1024];
              int length;
-             while ((length = fis.read(readBuffer)) >= 0) {
+             while ((length = fis.read(readBuffer)) >= 0){
                fos.write(readBuffer, 0, length);
              }
              fis.close();
              fos.close();
+
+             sendMsg(extractedFile)
            }// end isValidFile if statement
          } // end it.isDirectory if statement
        } // end zipFile.entries().each
+       zipFile.close()
      } // end zipfile.side if statement
-
-     zipFile.close()
 
      /***************************************************
      * deleteZipFile is used to delete the zip file after
      * all the files are extracted from it.
      ***************************************************/
      deleteZipFile(zipFile.getName())
-
-     return extractedFiles
    } // end method extractZipFileContent
 
 
