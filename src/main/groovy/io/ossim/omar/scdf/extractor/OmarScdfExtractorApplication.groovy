@@ -141,9 +141,9 @@ class OmarScdfExtractorApplication {
     final JsonBuilder filesExtractedJson = new JsonBuilder()
     filesExtractedJson(filename:extractedFile)
     if(logger.isDebugEnabled()){
-      logger.debug("Message Sent: ${filesExtractedJson}")
+      logger.debug("Message Sent: ${filesExtractedJson.toString()}")
     }
-    Message<String> msgToSend = MessageBuilder.withPayload(filesExtractedJson)
+    Message<String> msgToSend = MessageBuilder.withPayload(filesExtractedJson.toString())
         .copyHeaders(message.getHeaders())
         .build()
 
