@@ -10,7 +10,8 @@ import org.springframework.cloud.stream.messaging.Processor
 import org.springframework.messaging.Message
 import org.springframework.messaging.MessageChannel
 import org.springframework.messaging.support.MessageBuilder
-import org.springframework.messaging.handler.annotation.SendTo
+import org.springframework.cloud.stream.annotation.Output
+import org.springframework.cloud.stream.messaging.Source
 import groovy.json.JsonSlurper
 import groovy.json.JsonBuilder
 import org.slf4j.Logger
