@@ -139,10 +139,11 @@ class OmarScdfExtractorApplication {
   ***********************************************************/
   final void sendMsg(final String extractedFile, final Message<?> message){
     final JsonBuilder filesExtractedJson = new JsonBuilder()
+    filesExtractedJson(filename:extractedFile)
     if(logger.isDebugEnabled()){
-      logger.debug("Message Sent: ${filesExtractedJson(filename: extractedFile)}")
+      logger.debug("Message Sent: ${filesExtractedJson}")
     }
-    Message<String> msgToSend = MessageBuilder.withPayload(filesExtractedJson(filename:extractedFile))
+    Message<String> msgToSend = MessageBuilder.withPayload(filesExtractedJson)
         .copyHeaders(message.getHeaders())
         .build()
 
