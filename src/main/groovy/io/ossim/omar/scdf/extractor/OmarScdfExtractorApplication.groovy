@@ -4,9 +4,11 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.cloud.stream.annotation.EnableBinding
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cloud.stream.annotation.StreamListener
 import org.springframework.cloud.stream.messaging.Processor
 import org.springframework.messaging.Message
+import org.springframework.messaging.support.MessageBuilder
 import org.springframework.messaging.handler.annotation.SendTo
 import org.springframework.cloud.stream.binding.BinderAwareChannelResolver
 import groovy.json.JsonSlurper
@@ -20,7 +22,7 @@ import org.apache.tika.parser.gdal.GDALParser
 @SpringBootApplication
 @EnableBinding(Processor.class)
 class OmarScdfExtractorApplication {
-
+  @Autowired
   private BinderAwareChannelResolver resolver
 
   /**************************************************
