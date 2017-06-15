@@ -8,9 +8,9 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cloud.stream.annotation.StreamListener
 import org.springframework.cloud.stream.messaging.Processor
 import org.springframework.messaging.Message
+import org.springframework.messaging.MessageChannel
 import org.springframework.messaging.support.MessageBuilder
 import org.springframework.messaging.handler.annotation.SendTo
-import org.springframework.cloud.stream.binding.BinderAwareChannelResolver
 import groovy.json.JsonSlurper
 import groovy.json.JsonBuilder
 import org.slf4j.Logger
@@ -22,8 +22,10 @@ import org.apache.tika.parser.gdal.GDALParser
 @SpringBootApplication
 @EnableBinding(Processor.class)
 class OmarScdfExtractorApplication {
+
   @Autowired
-  private BinderAwareChannelResolver resolver
+  @Output(Source.OUTPUT)
+  private MessageChannel outputChannel
 
   /**************************************************
   * The application logger
@@ -33,9 +35,9 @@ class OmarScdfExtractorApplication {
   /**************************************************
   * fileSource and fileDestination are variables
   * passed in from application.properties file.
-  * They represent where to find the zip file you need
-  * to extract (fileSource) and where to place the
-  * extracted files (fileDestination).
+  * They represent where to find the zip file you
+  * need to extract (fileSource) and where to place
+  * the extracted files (fileDestination).
   ***************************************************/
   @Value('${fileSource}')
   String fileSource
@@ -51,9 +53,9 @@ class OmarScdfExtractorApplication {
   ***************************************************/
   final public static String[] MEDIA_TYPE_LIST = ['image/jpeg','image/tiff','image/nitf']
 
-  /**
+  /*************************************************
    * Constructor
-   */
+   ************************************************/
   OmarScdfExtractorApplication() {
 
     // Check for empty properties
@@ -83,10 +85,10 @@ class OmarScdfExtractorApplication {
   /***********************************************************
   *
   * Function: receiveMsg
-  * Purpose:  Takes a message, extract the file names, then send
-  *           the zip file to the extractZipFileContent method.
-  *           The extracted file name is then returned and
-  *           message is sent.
+  * Purpose:  Receives a message and extract the zip file
+  *           name from the message payload.  It will then
+  *           pass both the file name and the message to the
+  *           extractZipFileContent method.
   *
   * @param    message (Message<?>)
   *
@@ -128,15 +130,18 @@ class OmarScdfExtractorApplication {
   /***********************************************************
   *
   * Function: sendMsg
-  * Purpose:  Takes the path to a file, use it to build a Json
-  *           message, then pass it on the Processor output pipe,
-  *           which is defined in the application.properties file.
+  * Purpose:  Receives the path to a file which will be used
+  *           as a payload to the message that will be created
+  *           and a message whose header will be copied to the
+  *           newly created message.  The message is then
+  *           sent on Processor output stream which is defined
+  *           in the application.properties file.
   *           (spring.cloud.stream.bindings.output.destination)
   *
   * @param    extractedFile (String)
-  * @return   filesExtractedJson (converted to String)
+  * @param    message (Message<?>)
   *
-  ***********************************************************/
+  ************************************************************/
   final void sendMsg(final String extractedFile, final Message<?> message){
     final JsonBuilder filesExtractedJson = new JsonBuilder()
     filesExtractedJson(filename:extractedFile)
@@ -147,7 +152,7 @@ class OmarScdfExtractorApplication {
         .copyHeaders(message.getHeaders())
         .build()
 
-    resolver.resolveDestination(Processor.OUTPUT).send(msgToSend)
+    outputChannel.send(msgToSend)
   } // end method sendMsg
 
 
@@ -161,72 +166,73 @@ class OmarScdfExtractorApplication {
   *           (fileSource, fileDestination)
   *
   * @param    zipFile (ZipFile)
+  * @param    message (Message<?>)
   *
   ***********************************************************/
   void extractZipFileContent(final ZipFile zipFile, final Message<?> message){
-     /***********************************************
-     * extractedFiles is used to store the full path
-     * of the files extracted from the zip file.
-     ***********************************************/
-     final String extractedFile
+    /***********************************************
+    * extractedFiles is used to store the full path
+    * of the files extracted from the zip file.
+    ***********************************************/
+    final String extractedFile
 
-     /***********************************************
-     * If statement that checks if zipfile is empty.
-     ***********************************************/
-     if (zipFile.size() > 0){
-       /*****************************************************
-       * zipFile.entries().each iterates through the zip file
-       ******************************************************/
-       zipFile.entries().each{
-         /***********************************************
-         * If statement that checks to make sure the
-         * extracted is not a directory
-         ***********************************************/
-         if (!it.isDirectory()){
-           final InputStream zinputStream = zipFile.getInputStream(it)
-           final boolean isValidFile = checkType(zinputStream)
+    /***********************************************
+    * If statement that checks if zipfile is empty.
+    ***********************************************/
+    if (zipFile.size() > 0){
+      /*****************************************************
+      * zipFile.entries().each iterates through the zip file
+      ******************************************************/
+      zipFile.entries().each{
+        /***********************************************
+        * If statement that checks to make sure the
+        * extracted is not a directory
+        ***********************************************/
+        if (!it.isDirectory()){
+          final InputStream zinputStream = zipFile.getInputStream(it)
+          final boolean isValidFile = checkType(zinputStream)
 
-           /***********************************************
-           * If statement that checks if the media type of
-           * the extracted file is supported.
-           ***********************************************/
-           if (isValidFile){
-             File fout = new File(fileDestination + it.name)
+          /***********************************************
+          * If statement that checks if the media type of
+          * the extracted file is supported.
+          ***********************************************/
+          if (isValidFile){
+            File fout = new File(fileDestination + it.name)
 
-             /***********************************************
-             * Makes the parent directory of the file that
-             * was extracted from the zip file.
-             ************************************************/
-             new File(fout.parent).mkdirs()
+            /***********************************************
+            * Makes the parent directory of the file that
+            * was extracted from the zip file.
+            ************************************************/
+            new File(fout.parent).mkdirs()
 
-             /***********************************************
-             * Adds the fullpath to the extracted file to the
-             * extractedFiles array list.
-             ***********************************************/
-             extractedFile = fout.getAbsolutePath()
+            /***********************************************
+            * Adds the fullpath to the extracted file to the
+            * extractedFiles array list.
+            ***********************************************/
+            extractedFile = fout.getAbsolutePath()
 
-             InputStream fis = zipFile.getInputStream(it)
-             FileOutputStream fos = new FileOutputStream(fout)
-             byte[] readBuffer = new byte[1024]
-             int length
-             while ((length = fis.read(readBuffer)) >= 0){
-               fos.write(readBuffer, 0, length)
-             }
-             fis.close()
-             fos.close()
-             sendMsg(extractedFile, message)
-           }// end isValidFile if statement
-         } // end it.isDirectory if statement
-       } // end zipFile.entries().each
-       zipFile.close()
-     } // end zipfile.side if statement
+            InputStream fis = zipFile.getInputStream(it)
+            FileOutputStream fos = new FileOutputStream(fout)
+            byte[] readBuffer = new byte[1024]
+            int length
+            while ((length = fis.read(readBuffer)) >= 0){
+              fos.write(readBuffer, 0, length)
+            }
+            fis.close()
+            fos.close()
+            sendMsg(extractedFile, message)
+          }// end isValidFile if statement
+        } // end it.isDirectory if statement
+      } // end zipFile.entries().each
+      zipFile.close()
+    } // end zipfile.side if statement
 
-     /***************************************************
-     * deleteZipFile is used to delete the zip file after
-     * all the files are extracted from it.
-     ***************************************************/
-     deleteZipFile(zipFile.getName())
-   } // end method extractZipFileContent
+    /***************************************************
+    * deleteZipFile is used to delete the zip file after
+    * all the files are extracted from it.
+    ***************************************************/
+    deleteZipFile(zipFile.getName())
+  } // end method extractZipFileContent
 
 
   /***********************************************************
@@ -265,7 +271,8 @@ class OmarScdfExtractorApplication {
   /***********************************************************
   *
   * Function: deleteZipFile
-  * Purpose:  Deletes the file (zipFile) passed to the method
+  * Purpose:  Takes the path to the zip file (zipFile), then
+  *           deletes it.
   *
   * @param    zipFile (String)
   *
