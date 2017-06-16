@@ -154,14 +154,14 @@ class OmarScdfExtractorApplication
             * zipFile.entries().each iterates through the zip file
             ******************************************************/
             zipFile.entries().each
-            {
+            { zipEntry ->
                 /***********************************************
                 * If statement that checks to make sure the
                 * extracted is not a directory
                 ***********************************************/
-                if (!it.isDirectory())
+                if (!zipEntry.isDirectory())
                 {
-                    final InputStream zinputStream = zipFile.getInputStream(it)
+                    final InputStream zinputStream = zipFile.getInputStream(zipEntry)
                     zipFile.getName()
                     final boolean isValidFile = checkType(zinputStream)
 
@@ -171,13 +171,8 @@ class OmarScdfExtractorApplication
                     ***********************************************/
                     if (isValidFile)
                     {
-                        File fout = new File(zipFile.getName() + it.name)
-
-                        /***********************************************
-                        * Makes the parent directory of the file that
-                        * was extracted from the zip file.
-                        ************************************************/
-                        new File(fout.parent).mkdirs()
+                        File zipParent = new File(new File(zipFile.getName()).parent)
+                        File fout = new File(zipParent.getAbsolutePath() + "/" + zipEntry.name)
 
                         /***********************************************
                         * Adds the fullpath to the extracted file to the
@@ -185,7 +180,7 @@ class OmarScdfExtractorApplication
                         ***********************************************/
                         extractedFile = fout.getAbsolutePath()
 
-                        InputStream fis = zipFile.getInputStream(it)
+                        InputStream fis = zipFile.getInputStream(zipEntry)
                         FileOutputStream fos = new FileOutputStream(fout)
                         byte[] readBuffer = new byte[1024]
                         int length
@@ -199,7 +194,7 @@ class OmarScdfExtractorApplication
 
                         sendMsg(extractedFile, message)
                     }// end isValidFile if statement
-                } // end it.isDirectory if statement
+                } // end zipEntry.isDirectory if statement
             } // end zipFile.entries().each
             zipFile.close()
         } // end zipfile.side if statement
