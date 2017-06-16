@@ -175,6 +175,12 @@ class OmarScdfExtractorApplication
                         File fout = new File(zipParent.getAbsolutePath() + "/" + zipEntry.name)
 
                         /***********************************************
+                        * Makes the parent directory of the file that
+                        * was extracted from the zip file.
+                        ************************************************/
+                        new File(fout.parent).mkdirs()
+
+                        /***********************************************
                         * Adds the fullpath to the extracted file to the
                         * extractedFiles array list.
                         ***********************************************/
