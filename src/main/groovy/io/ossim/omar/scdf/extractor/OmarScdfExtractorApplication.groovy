@@ -30,19 +30,6 @@ class OmarScdfExtractorApplication
     private MessageChannel outputChannel
 
     /**************************************************
-    * fileSource and fileDestination are variables
-    * passed in from application.properties file.
-    * They represent where to find the zip file you
-    * need to extract (fileSource) and where to place
-    * the extracted files (fileDestination).
-    ***************************************************/
-    @Value('${fileSource:/data/}')
-    String fileSource
-
-    @Value('${fileDestination:/data/}')
-    String fileDestination
-
-    /**************************************************
     * mediaTypeList contains the media types supported
     * by this class. The media types must be in the
     * format recognized by Apache Tika.
@@ -90,8 +77,7 @@ class OmarScdfExtractorApplication
                 parsedJson.files.each { file ->
                     if (file.endsWith("zip"))
                     {
-                        final String filePath = fileSource + file
-                        final File fileFromMsg = new File(filePath)
+                        final File fileFromMsg = new File(file)
 
                         /**************************************************
                         * If statement that checks if fileFromMsg is empty.
@@ -145,8 +131,7 @@ class OmarScdfExtractorApplication
     * Purpose:  Takes a zip file from a specified location,
     *           unzip it and place the unzipped files in a
     *           specified location.  Both locations are
-    *           defined by in the application.properties file.
-    *           (fileSource, fileDestination)
+    *           passed in by the Extractor
     *
     * @param    zipFile (ZipFile)
     * @param    message (Message<?>)
@@ -177,6 +162,7 @@ class OmarScdfExtractorApplication
                 if (!it.isDirectory())
                 {
                     final InputStream zinputStream = zipFile.getInputStream(it)
+                    zipFile.getName()
                     final boolean isValidFile = checkType(zinputStream)
 
                     /***********************************************
@@ -185,7 +171,7 @@ class OmarScdfExtractorApplication
                     ***********************************************/
                     if (isValidFile)
                     {
-                        File fout = new File(fileDestination + it.name)
+                        File fout = new File(zipFile.getName() + it.name)
 
                         /***********************************************
                         * Makes the parent directory of the file that
