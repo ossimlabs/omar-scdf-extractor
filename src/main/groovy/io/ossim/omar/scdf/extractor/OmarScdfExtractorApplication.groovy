@@ -91,7 +91,7 @@ class OmarScdfExtractorApplication
                             }
                         } // end fileFromMsg.size() if statement
                     } // end file.contains if statement
-                    else
+                    else if (!new File(file).isDirectory())
                     {
                         // send message along the chain if it isn't of type .zip
                         sendMsg(file, message)
