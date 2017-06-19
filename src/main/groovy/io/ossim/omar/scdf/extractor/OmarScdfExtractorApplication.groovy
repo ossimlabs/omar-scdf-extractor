@@ -91,6 +91,11 @@ class OmarScdfExtractorApplication
                             }
                         } // end fileFromMsg.size() if statement
                     } // end file.contains if statement
+                    else
+                    {
+                        // send message along the chain if it isn't of type .zip
+                        sendMsg(file, message)
+                    }
                 } // end parsedJson.files.each
             } // end parseJason if statement
         } // end message.payload if statement
