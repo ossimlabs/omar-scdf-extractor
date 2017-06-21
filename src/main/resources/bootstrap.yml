@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: omar-scdf-extractor
+  cloud:
+    config:
+      enabled: true
+      uri: ${SPRING_CONFIG_URI:http://localhost:8888/scdf-config-server}
+    discovery:
+      enabled: true
