@@ -1,7 +1,6 @@
 buildscript {
 	ext {
 		springBootVersion = '1.5.3.RELEASE'
-		fullAssemble={true}	
 	}
 	if(System.env.OMAR_COMMON_PROPERTIES)
 	{
