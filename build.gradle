@@ -7,7 +7,6 @@ buildscript {
                 "FROM ${project.dockerNamespaceUrl}${project.ext.baseImage}:${project.dockerAppTag}",
                 "MAINTAINER DigitalGlobe-RadiantBlue",
                 """LABEL com.digitalglobe.version="" """,
-                "RUN mkdir /home/omar",
                 "COPY /${project.name}-${buildVersion}-${buildVersionTag}.jar /home/omar",
                 'RUN find $HOME -type d -exec chmod g+x {} +',
                 "USER 1001",
