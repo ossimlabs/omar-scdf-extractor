@@ -1,20 +1,20 @@
 buildscript {
-	ext {
-		springBootVersion = '1.5.3.RELEASE'
+    ext {
+        springBootVersion = '1.5.3.RELEASE'
         baseImage = "omar-base"
         dockerStatementsOverride = {
-            [
-                "FROM ${project.dockerNamespaceUrl}${project.ext.baseImage}:${project.dockerAppTag}",
-                "MAINTAINER DigitalGlobe-RadiantBlue",
-                """LABEL com.digitalglobe.version="" """,
-                "COPY /${project.name}-${buildVersion}-${buildVersionTag}.jar /home/omar",
-                'RUN find $HOME -type d -exec chmod g+x {} +',
-                "USER 1001",
-                "WORKDIR /home/omar",
-                "EXPOSE 8080",
-                "ENTRYPOINT java -jar /home/omar/${project.name}-${buildVersion}-${buildVersionTag}.jar"
-           ]
-        }
+        [
+            "FROM ${project.dockerNamespaceUrl}${project.ext.baseImage}:${project.dockerAppTag}",
+            "MAINTAINER DigitalGlobe-RadiantBlue",
+            """LABEL com.digitalglobe.version="" """,
+            "COPY /${project.name}-${buildVersion}-${buildVersionTag}.jar /home/omar",
+            'RUN find $HOME -type d -exec chmod g+x {} +',
+            "USER 1001",
+            "WORKDIR /home/omar",
+            "EXPOSE 8080",
+            "ENTRYPOINT java -jar /home/omar/${project.name}-${buildVersion}-${buildVersionTag}.jar"
+       ]
+}
 	}
 	if(System.env.OMAR_COMMON_PROPERTIES)
 	{
