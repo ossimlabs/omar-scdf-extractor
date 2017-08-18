@@ -11,7 +11,7 @@ buildscript {
                 'RUN find $HOME -type d -exec chmod g+x {} +',
                 "USER 1001",
                 "WORKDIR /home/omar",
-                "VOLUME /tmp",
+                "VOLUME /data",
                 "EXPOSE 8080",
                 "ENTRYPOINT java -jar /usr/share/omar/${project.name}-${buildVersion}-${buildVersionTag}.jar"
            ]
