@@ -7,3 +7,9 @@ spring:
       uri: ${SPRING_CONFIG_URI:http://localhost:8888/scdf-config-server}
     discovery:
       enabled: true
+---
+spring:
+profiles: production
+cloud:
+config:
+uri: http://scdf-config-server:8888/scdf-config-server
