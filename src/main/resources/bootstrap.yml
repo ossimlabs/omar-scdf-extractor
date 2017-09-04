@@ -4,12 +4,18 @@ spring:
   cloud:
     config:
       enabled: true
-      uri: ${SPRING_CONFIG_URI:http://localhost:8888/scdf-config-server}
+      uri: ${SPRING_CONFIG_URI:http://localhost:8888/omar-config-server}
     discovery:
-      enabled: true
+      enabled: false
 ---
 spring:
-profiles: production
-cloud:
-config:
-uri: http://scdf-config-server:8888/scdf-config-server
+  application:
+    name: omar-scdf-extractor
+  profiles:
+      active: production
+  cloud:
+    config:
+      enabled: true
+      uri: http://scdf-config-server:8888/omar-config-server
+    discovery:
+      enabled: false

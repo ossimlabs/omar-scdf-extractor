@@ -9,10 +9,12 @@ buildscript {
             """LABEL com.digitalglobe.version="" """,
             "COPY /${project.name}-${buildVersion}-${buildVersionTag}.jar /home/omar",
             'RUN find $HOME -type d -exec chmod g+x {} +',
+            "ENV SPRING_PROFILES_ACTIVE=production",
             "USER 1001",
             "WORKDIR /home/omar",
+            "VOLUME /tmp",
             "EXPOSE 8080",
-            "ENTRYPOINT java -jar /home/omar/${project.name}-${buildVersion}-${buildVersionTag}.jar"
+            "ENTRYPOINT java -server -Xms256m -Xmx1024m -Djava.awt.headless=true -XX:+CMSClassUnloadingEnabled -XX:+UseGCOverheadLimit -Djava.security.egd=file:/dev/./urandom -jar /home/omar/${project.name}-${buildVersion}-${buildVersionTag}.jar"
        ]
 }
 	}
