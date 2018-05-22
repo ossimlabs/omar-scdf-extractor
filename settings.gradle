@@ -1,4 +1,0 @@
-pluginRepositories {
-	maven { url "${ System.getenv('ARTIFACOTRY_URL') }/ossim-deps" }
-	gradlePluginPortal()
-}
